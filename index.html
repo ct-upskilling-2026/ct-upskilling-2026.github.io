@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABC Tutoring — Local Tutoring for K–12</title>
+<meta name="description" content="Local tutoring, in person and online. Elementary math through Algebra II, science, and elementary reading.">
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232F6F62'/><text x='50' y='68' font-size='46' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
+<script src="data/tutors.js"></script>
+<script src="assets/js/analytics.js"></script>
+</head>
+<body>
+<div id="head"></div>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="pill">In person &amp; online</span>
+      <h1>Tutoring that fits your family's week.</h1>
+      <p class="lede">We're a local tutoring service in the suburb. Pick a tutor you like, choose a time
+        that actually works, and book it in about a minute — no phone tag.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="tutors.html" data-cta="view_tutors">See our tutors</a>
+        <a class="btn btn-ghost" href="book.html" data-cta="book_now">Book a session</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>How it works</h2>
+      <p class="sub">Three steps, all from your phone.</p>
+      <div class="grid g3">
+        <div class="card"><div class="step-n">1</div><h3>Browse tutors</h3>
+          <p>See each tutor's subjects, grade levels, hourly rate, and the times they're actually free.</p></div>
+        <div class="card"><div class="step-n">2</div><h3>Pick a real time slot</h3>
+          <p>You only ever see openings that are genuinely available. Sessions run one hour.</p></div>
+        <div class="card"><div class="step-n">3</div><h3>You're booked</h3>
+          <p>Tell us a little about your student and you're done. That slot closes immediately.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <h2>What we help with</h2>
+      <p class="sub">Kindergarten through high school algebra.</p>
+      <div class="grid g3">
+        <div class="card"><h3>Math</h3><p>Elementary math, pre-algebra, Algebra I, and Algebra II.</p></div>
+        <div class="card"><h3>Science</h3><p>Elementary and middle school science.</p></div>
+        <div class="card"><h3>Reading</h3><p>Elementary reading and phonics for early and reluctant readers.</p></div>
+      </div>
+      <p style="margin-top:26px;text-align:center">
+        <a class="btn btn-accent" href="tutors.html" data-cta="subjects_view_tutors">Find a tutor</a>
+      </p>
+    </div>
+  </section>
+</main>
+
+<div id="foot"></div>
+<script src="assets/js/app.js"></script>
+<script>
+  document.getElementById('head').innerHTML = ABC.navBar('home');
+  document.getElementById('foot').innerHTML = ABC.footer();
+  document.querySelectorAll('[data-cta]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      abcTrack('home_cta_clicked', { cta: el.getAttribute('data-cta') });
+    });
+  });
+</script>
+</body>
+</html>

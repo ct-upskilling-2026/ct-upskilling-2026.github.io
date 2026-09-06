@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Our Tutors — ABC Tutoring</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232F6F62'/><text x='50' y='68' font-size='46' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
+<script src="data/tutors.js"></script>
+<script src="assets/js/analytics.js"></script>
+</head>
+<body>
+<div id="head"></div>
+
+<main class="wrap section">
+  <h2>Our tutors</h2>
+  <p class="sub">Six tutors covering math, science, and reading. Times shown are real openings in the next three weeks.</p>
+
+  <div class="note" id="sampleNote"><b>Note for Dana:</b> these are sample profiles.
+    Replace them in <code>data/tutors.js</code> and this page updates itself.</div>
+
+  <div class="filters">
+    <div class="field">
+      <label for="fSubject">Subject</label>
+      <select id="fSubject"><option value="">All subjects</option></select>
+    </div>
+    <div class="field">
+      <label for="fGrade">Student's grade</label>
+      <select id="fGrade"><option value="">Any grade</option></select>
+    </div>
+  </div>
+
+  <div class="grid g2" id="list"></div>
+</main>
+
+<div id="foot"></div>
+<script src="assets/js/app.js"></script>
+<script>
+document.getElementById('head').innerHTML = ABC.navBar('tutors');
+document.getElementById('foot').innerHTML = ABC.footer();
+
+var fSubject = document.getElementById('fSubject');
+var fGrade   = document.getElementById('fGrade');
+var list     = document.getElementById('list');
+var scarcityReported = {};
+
+ABC_DATA.subjects.forEach(function (s) {
+  fSubject.insertAdjacentHTML('beforeend', '<option value="' + s + '">' + s + '</option>');
+});
+for (var g = 0; g <= 12; g++) {
+  fGrade.insertAdjacentHTML('beforeend', '<option value="' + g + '">' + ABC.gradeLabel(g) + ' grade</option>');
+}
+
+function matching() {
+  var s = fSubject.value, g = fGrade.value;
+  return ABC_DATA.tutors.filter(function (t) {
+    if (s && t.subjects.indexOf(s) === -1) return false;
+    if (g !== '' && (+g < t.gradeLow || +g > t.gradeHigh)) return false;
+    return true;
+  });
+}
+
+function render(reason) {
+  var tutors = matching();
+
+  if (!tutors.length) {
+    list.innerHTML = '<div class="empty">No tutors match that combination yet. Try clearing a filter — ' +
+                     'or <a href="book.html">send us a booking request</a> and we\'ll find someone.</div>';
+  } else {
+    list.innerHTML = tutors.map(function (t) {
+      var slots = ABC.openSlots(t);
+      var next  = slots[0];
+      var avail = next
+        ? '<p class="avail-line">Next opening: ' + next.dateLabel + ' at ' + next.timeLabel +
+          ' · ' + slots.length + ' slot' + (slots.length === 1 ? '' : 's') + ' open</p>'
+        : '<p class="avail-line none">Fully booked for the next three weeks</p>';
+
+      // Tell Dana when a tutor has nothing left — that is a "time to hire" signal.
+      if (!next && !scarcityReported[t.id]) {
+        scarcityReported[t.id] = 1;
+        abcTrack('no_slots_available', { tutor: t.name, tutor_id: t.id, subjects: t.subjects.join(', ') });
+      }
+
+      return '<article class="tutor">' +
+        '<div class="tutor-top">' + ABC.avatar(t) +
+          '<div><h3>' + t.name + '</h3><div class="rate">$' + t.rate + '/hour · ' + t.mode + '</div></div>' +
+        '</div>' +
+        '<div class="tags">' + t.subjects.map(function (s) { return '<span class="tag subj">' + s + '</span>'; }).join('') +
+          '<span class="tag">Grades ' + ABC.gradeRange(t.gradeLow, t.gradeHigh) + '</span></div>' +
+        '<p class="meta">' + t.blurb + '</p>' +
+        avail +
+        '<a class="btn ' + (next ? 'btn-primary' : 'btn-ghost') + '" href="book.html?tutor=' + t.id + '" ' +
+          'data-tutor="' + t.id + '" data-has-slots="' + !!next + '">' +
+          (next ? 'See times &amp; book' : 'Join the waitlist') + '</a>' +
+        '</article>';
+    }).join('');
+  }
+
+  list.querySelectorAll('[data-tutor]').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var t = ABC.tutorById(el.getAttribute('data-tutor'));
+      abcTrack('tutor_profile_opened', {
+        tutor: t.name, tutor_id: t.id, subjects: t.subjects.join(', '),
+        rate: t.rate, has_slots: el.getAttribute('data-has-slots') === 'true'
+      });
+    });
+  });
+
+  abcTrack('tutor_list_viewed', {
+    filter_subject: fSubject.value || 'all',
+    filter_grade: fGrade.value === '' ? 'any' : ABC.gradeLabel(+fGrade.value),
+    results_count: tutors.length,
+    trigger: reason
+  });
+}
+
+fSubject.addEventListener('change', function () { render('filter'); });
+fGrade.addEventListener('change', function () { render('filter'); });
+render('page_load');
+</script>
+</body>
+</html>

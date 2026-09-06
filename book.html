@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book a Session — ABC Tutoring</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232F6F62'/><text x='50' y='68' font-size='46' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
+<script src="data/tutors.js"></script>
+<script src="assets/js/analytics.js"></script>
+</head>
+<body>
+<div id="head"></div>
+
+<main class="wrap section">
+  <h2>Book a session</h2>
+  <p class="sub">Pick a tutor, choose an open time, and tell us about your student. Sessions are one hour.</p>
+
+  <div class="book-grid">
+    <!-- left: tutor + calendar -->
+    <div class="card">
+      <div class="form-field">
+        <label for="tutorSel">1. Choose a tutor</label>
+        <select id="tutorSel"></select>
+      </div>
+      <div id="tutorInfo"></div>
+      <div class="form-field" style="margin-top:18px">
+        <label>2. Choose an open time</label>
+      </div>
+      <div id="slots" class="slot-days"></div>
+    </div>
+
+    <!-- right: details -->
+    <div class="card">
+      <div class="form-field"><label>3. Your details</label></div>
+      <div class="summary" id="summary">Pick a tutor and a time to continue.</div>
+      <form id="bookForm" novalidate>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="parentName">Parent name</label>
+            <input id="parentName" name="parentName" autocomplete="name" placeholder="Jane Doe">
+          </div>
+          <div class="form-field">
+            <label for="parentEmail">Parent email</label>
+            <input id="parentEmail" name="parentEmail" type="email" autocomplete="email" placeholder="jane@email.com">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="studentName">Student first name</label>
+            <input id="studentName" name="studentName" placeholder="Sam">
+          </div>
+          <div class="form-field">
+            <label for="studentGrade">Student grade</label>
+            <select id="studentGrade" name="studentGrade"><option value="">Select…</option></select>
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="subject">Subject they need help with</label>
+          <select id="subject" name="subject"><option value="">Select…</option></select>
+        </div>
+        <div class="err" id="err"></div>
+        <button class="btn btn-primary" id="submitBtn" type="submit" style="width:100%">Confirm booking</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<div id="foot"></div>
+<script src="assets/js/app.js"></script>
+<script>
+document.getElementById('head').innerHTML = ABC.navBar('book');
+document.getElementById('foot').innerHTML = ABC.footer();
+
+var tutorSel = document.getElementById('tutorSel'),
+    tutorInfo = document.getElementById('tutorInfo'),
+    slotsEl = document.getElementById('slots'),
+    summary = document.getElementById('summary'),
+    gradeSel = document.getElementById('studentGrade'),
+    subjSel = document.getElementById('subject'),
+    form = document.getElementById('bookForm'),
+    errEl = document.getElementById('err');
+
+var selectedSlot = null, formStarted = false, emptyReported = {};
+
+for (var g = 0; g <= 12; g++) {
+  gradeSel.insertAdjacentHTML('beforeend', '<option value="' + g + '">' + ABC.gradeLabel(g) + ' grade</option>');
+}
+ABC_DATA.tutors.forEach(function (t) {
+  tutorSel.insertAdjacentHTML('beforeend',
+    '<option value="' + t.id + '">' + t.name + ' — ' + t.subjects.join(', ') + ' ($' + t.rate + '/hr)</option>');
+});
+
+var preset = new URLSearchParams(location.search).get('tutor');
+if (preset && ABC.tutorById(preset)) tutorSel.value = preset;
+
+function currentTutor() { return ABC.tutorById(tutorSel.value); }
+
+function renderTutor() {
+  var t = currentTutor();
+  selectedSlot = null;
+
+  tutorInfo.innerHTML =
+    '<div class="tutor-top" style="margin-top:6px">' + ABC.avatar(t, 46) +
+    '<div><b>' + t.name + '</b><div class="meta">Grades ' + ABC.gradeRange(t.gradeLow, t.gradeHigh) +
+    ' · $' + t.rate + '/hour · ' + t.mode + '</div></div></div>';
+
+  // subject options follow the tutor
+  subjSel.innerHTML = '<option value="">Select…</option>';
+  t.subjects.forEach(function (s) {
+    subjSel.insertAdjacentHTML('beforeend', '<option value="' + s + '">' + s + '</option>');
+  });
+  if (t.subjects.length === 1) subjSel.value = t.subjects[0];
+
+  var slots = ABC.openSlots(t);
+  if (!slots.length) {
+    slotsEl.innerHTML = '<div class="empty"><b>' + t.name + ' is fully booked</b><br>' +
+      'for the next three weeks. Try another tutor above.</div>';
+    if (!emptyReported[t.id]) {
+      emptyReported[t.id] = 1;
+      abcTrack('no_slots_available', {
+        tutor: t.name, tutor_id: t.id, subjects: t.subjects.join(', '), page: 'booking'
+      });
+    }
+  } else {
+    var byDay = {}, order = [];
+    slots.forEach(function (s) {
+      if (!byDay[s.dateLabel]) { byDay[s.dateLabel] = []; order.push(s.dateLabel); }
+      byDay[s.dateLabel].push(s);
+    });
+    slotsEl.innerHTML = order.map(function (d) {
+      return '<div class="day-row"><div class="day-label">' + d + '</div><div class="slots">' +
+        byDay[d].map(function (s) {
+          return '<button type="button" class="slot" data-iso="' + s.iso + '">' + s.timeLabel + '</button>';
+        }).join('') + '</div></div>';
+    }).join('');
+
+    slotsEl.querySelectorAll('.slot').forEach(function (b) {
+      b.addEventListener('click', function () {
+        slotsEl.querySelectorAll('.slot').forEach(function (x) { x.classList.remove('sel'); });
+        b.classList.add('sel');
+        selectedSlot = slots.filter(function (s) { return s.iso === b.getAttribute('data-iso'); })[0];
+        updateSummary();
+        abcTrack('slot_selected', {
+          tutor: t.name, tutor_id: t.id,
+          day_of_week: selectedSlot.day, hour: parseInt(selectedSlot.time, 10),
+          days_ahead: Math.round((selectedSlot.date - new Date()) / 86400000)
+        });
+      });
+    });
+  }
+  updateSummary();
+}
+
+function updateSummary() {
+  var t = currentTutor();
+  summary.innerHTML = selectedSlot
+    ? '<b>' + t.name + '</b>' + selectedSlot.dateLabel + ' at ' + selectedSlot.timeLabel +
+      ' · 1 hour · $' + t.rate
+    : 'Pick a time on the left to continue.';
+}
+
+form.addEventListener('focusin', function () {
+  if (formStarted) return;
+  formStarted = true;
+  abcTrack('booking_form_started', { tutor: currentTutor().name, has_slot: !!selectedSlot });
+});
+
+form.addEventListener('submit', function (e) {
+  e.preventDefault();
+  var t = currentTutor();
+  var v = {
+    parentName: form.parentName.value.trim(),
+    parentEmail: form.parentEmail.value.trim(),
+    studentName: form.studentName.value.trim(),
+    studentGrade: gradeSel.value,
+    subject: subjSel.value
+  };
+
+  var problem = '';
+  if (!selectedSlot) problem = 'Please pick an available time first.';
+  else if (!v.parentName) problem = 'Please enter the parent name.';
+  else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.parentEmail)) problem = 'Please enter a valid email address.';
+  else if (!v.studentName) problem = "Please enter the student's first name.";
+  else if (v.studentGrade === '') problem = "Please select the student's grade.";
+  else if (!v.subject) problem = 'Please choose a subject.';
+
+  if (problem) {
+    errEl.textContent = problem;
+    abcTrack('booking_validation_failed', { reason: problem });
+    return;
+  }
+  errEl.textContent = '';
+
+  var booking = Object.assign({
+    tutorId: t.id, tutorName: t.name, iso: selectedSlot.iso,
+    when: selectedSlot.dateLabel + ' at ' + selectedSlot.timeLabel,
+    rate: t.rate, mode: t.mode, createdAt: new Date().toISOString()
+  }, v);
+
+  ABC.addBooking(booking);
+  try { sessionStorage.setItem('abc_last_booking', JSON.stringify(booking)); } catch (err) {}
+
+  abcTrack('booking_completed', {
+    tutor: t.name, tutor_id: t.id, subject: v.subject,
+    grade: ABC.gradeLabel(+v.studentGrade), grade_num: +v.studentGrade,
+    mode: t.mode, rate: t.rate,
+    day_of_week: selectedSlot.day, hour: parseInt(selectedSlot.time, 10),
+    days_ahead: Math.round((selectedSlot.date - new Date()) / 86400000)
+  });
+
+  location.href = 'confirmed.html';
+});
+
+tutorSel.addEventListener('change', renderTutor);
+renderTutor();
+</script>
+</body>
+</html>

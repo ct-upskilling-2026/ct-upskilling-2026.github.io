@@ -1,0 +1,76 @@
+{
+  "generated": "2026-09-06T19:26:02.990Z",
+  "days": 14,
+  "visitors": 340,
+  "byStep": {
+    "$pageview": 690,
+    "referral_source": 340,
+    "tutor_list_viewed": 217,
+    "tutor_profile_opened": 138,
+    "slot_selected": 81,
+    "booking_form_started": 67,
+    "booking_completed": 52,
+    "no_slots_available": 18
+  },
+  "source": {
+    "facebook": 158,
+    "word-of-mouth": 81,
+    "flyer": 58,
+    "direct": 43
+  },
+  "subject": {
+    "Algebra I": 45,
+    "Science": 24,
+    "Elementary Math": 48,
+    "Algebra II": 44,
+    "Elementary Reading": 29,
+    "Pre-Algebra": 27
+  },
+  "tutor": {
+    "Grace L.": 12,
+    "Priya S.": 9,
+    "Elena V.": 4,
+    "Maya R.": 19,
+    "Daniel K.": 6,
+    "Marcus T.": 2
+  },
+  "device": {
+    "Mobile": 233,
+    "Desktop": 107
+  },
+  "bookedSubject": {
+    "Elementary Reading": 12,
+    "Algebra I": 12,
+    "Science": 4,
+    "Pre-Algebra": 10,
+    "Elementary Math": 10,
+    "Algebra II": 4
+  },
+  "hours": {
+    "9": 5,
+    "10": 5,
+    "11": 3,
+    "13": 2,
+    "15": 5,
+    "16": 9,
+    "17": 8,
+    "18": 9,
+    "19": 6
+  },
+  "dow": {
+    "Tue": 21,
+    "Sat": 13,
+    "Thu": 8,
+    "Wed": 4,
+    "Mon": 4,
+    "Sun": 2
+  },
+  "turnedAway": {
+    "Algebra II": 10,
+    "Algebra I": 3,
+    "Elementary Math": 3,
+    "Pre-Algebra": 1,
+    "Science": 1
+  },
+  "bookings": 52
+}

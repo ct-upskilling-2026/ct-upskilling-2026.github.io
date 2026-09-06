@@ -1,0 +1,48 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>ABC Tutoring — logic tests</title>
+<script src="../data/tutors.js"></script></head><body>
+<div id="head"></div><div id="foot"></div>
+<script>window.abcTrack=function(){};</script>
+<script src="../assets/js/app.js"></script>
+<script>
+var out=[], pass=0, fail=0;
+function ok(c,m){ (c?pass++:fail++); out.push((c?'PASS  ':'FAIL  ')+m); }
+localStorage.clear();
+
+var t = ABC.tutorById('maya-r');
+ok(!!t, 'tutorById finds maya-r');
+
+var before = ABC.openSlots(t);
+ok(before.length > 0, 'maya-r has open slots: ' + before.length);
+ok(before.every(function(s){return s.date > new Date();}), 'no slots in the past');
+ok(before[0].date <= before[before.length-1].date, 'slots are chronological');
+
+// grade labels
+ok(ABC.gradeLabel(0)==='K', 'grade 0 renders as K');
+ok(ABC.gradeLabel(1)==='1st' && ABC.gradeLabel(2)==='2nd' && ABC.gradeLabel(3)==='3rd' && ABC.gradeLabel(11)==='11th' && ABC.gradeLabel(12)==='12th',
+   'ordinals: 1st 2nd 3rd 11th 12th');
+ok(ABC.timeLabel('09:00')==='9am' && ABC.timeLabel('16:00')==='4pm' && ABC.timeLabel('12:00')==='12pm',
+   'time labels: 9am 4pm 12pm');
+
+// book the first slot -> it must disappear
+var target = before[0];
+ABC.addBooking({tutorId:t.id, iso:target.iso, parentName:'Test'});
+var after = ABC.openSlots(t);
+ok(after.length === before.length-1, 'booking removes exactly one slot ('+before.length+' -> '+after.length+')');
+ok(after.filter(function(s){return s.iso===target.iso;}).length===0, 'the booked slot is gone');
+
+// other tutors unaffected
+var other = ABC.tutorById('grace-l');
+ok(ABC.openSlots(other).length > 0, 'other tutors unaffected');
+
+// fully-booked tutor
+var m = ABC.tutorById('marcus-t');
+ABC.openSlots(m).forEach(function(s){ ABC.addBooking({tutorId:'marcus-t', iso:s.iso}); });
+ok(ABC.openSlots(m).length === 0, 'tutor can be fully booked out');
+
+// persistence
+ok(ABC.getBookings().length > 1, 'bookings persist in localStorage: ' + ABC.getBookings().length);
+
+localStorage.clear();
+document.body.innerHTML='<pre style="font:13px monospace;line-height:1.7">'+
+  out.join('\n')+'\n\n'+(fail?'*** '+fail+' FAILED ***':'ALL '+pass+' PASSED')+'</pre>';
+</script></body></html>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Booking Confirmed — ABC Tutoring</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%232F6F62'/><text x='50' y='68' font-size='46' font-family='sans-serif' font-weight='bold' fill='white' text-anchor='middle'>A</text></svg>">
+<script src="data/tutors.js"></script>
+<script src="assets/js/analytics.js"></script>
+</head>
+<body>
+<div id="head"></div>
+<main class="wrap"><div class="confirm" id="box"></div></main>
+<div id="foot"></div>
+<script src="assets/js/app.js"></script>
+<script>
+document.getElementById('head').innerHTML = ABC.navBar('');
+document.getElementById('foot').innerHTML = ABC.footer();
+
+var b = null;
+try { b = JSON.parse(sessionStorage.getItem('abc_last_booking') || 'null'); } catch (e) {}
+
+document.getElementById('box').innerHTML = b
+  ? '<div class="check">&#10003;</div>' +
+    '<h2 style="margin:0 0 8px">You\'re booked, ' + b.parentName.split(' ')[0] + '.</h2>' +
+    '<p class="meta">We\'ve saved this session and that time slot is now closed to everyone else. ' +
+    'A confirmation will go to <b>' + b.parentEmail + '</b>.</p>' +
+    '<div class="recap">' +
+      '<div><span>Tutor</span><span>' + b.tutorName + '</span></div>' +
+      '<div><span>When</span><span>' + b.when + '</span></div>' +
+      '<div><span>Student</span><span>' + b.studentName + ' · ' + ABC.gradeLabel(+b.studentGrade) + ' grade</span></div>' +
+      '<div><span>Subject</span><span>' + b.subject + '</span></div>' +
+      '<div><span>Session</span><span>1 hour · ' + b.mode + '</span></div>' +
+      '<div><span>Rate</span><span>$' + b.rate + '</span></div>' +
+    '</div>' +
+    '<a class="btn btn-ghost" href="tutors.html">Book another session</a>'
+  : '<div class="check" style="background:#C08A2E">!</div><h2>No booking to show</h2>' +
+    '<p class="meta">Looks like you landed here directly.</p>' +
+    '<p style="margin-top:20px"><a class="btn btn-primary" href="tutors.html">Browse tutors</a></p>';
+
+if (b) abcTrack('confirmation_viewed', { tutor: b.tutorName, subject: b.subject });
+</script>
+</body>
+</html>
