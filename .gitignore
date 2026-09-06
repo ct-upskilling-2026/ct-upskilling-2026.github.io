@@ -1,1 +1,16 @@
+# OS noise
 .DS_Store
+Thumbs.db
+
+# Secrets — never commit these.
+# NOTE: the phc_ PostHog *project* key in assets/js/analytics.js is a public,
+# client-side key and is meant to be committed. A PostHog *personal* API key
+# (phx_...) is NOT — keep those in .env or an environment variable only.
+.env
+.env.*
+*.pem
+*.key
+secrets.json
+
+# Tooling
+node_modules/
